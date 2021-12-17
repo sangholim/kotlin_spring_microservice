@@ -7,15 +7,13 @@ plugins {
 	kotlin("plugin.spring") version "1.3.72"
 }
 
-group = "com.msa.recommendation"
-version = "1.0.0-SNAPSHOT"
-java.sourceCompatibility = JavaVersion.VERSION_11
-
 repositories {
 	mavenCentral()
 }
 
 dependencies {
+
+	//implementation(project(":utils","default"))
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -29,13 +27,15 @@ dependencies {
 	testImplementation("io.projectreactor:reactor-test")
 }
 
+
+tasks.withType<JavaCompile> {
+	sourceCompatibility = "1.8"
+	targetCompatibility = "1.8"
+}
+
 tasks.withType<KotlinCompile> {
 	kotlinOptions {
 		freeCompilerArgs = listOf("-Xjsr305=strict")
-		jvmTarget = "11"
+		jvmTarget = "1.8"
 	}
-}
-
-tasks.withType<Test> {
-	useJUnitPlatform()
 }

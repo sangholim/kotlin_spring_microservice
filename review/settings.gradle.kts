@@ -1,1 +1,1 @@
-rootProject.name = "review"
+//rootProject.name = "review"

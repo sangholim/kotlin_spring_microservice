@@ -7,12 +7,18 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
+import com.msa.util.exception.InvalidInputException
+import com.msa.util.exception.NotFoundException
 
 @RestController
 class ProductResource(val productService: ProductService) {
     @GetMapping(value = ["/product/{productId}"], produces = ["application/json"])
     fun getProduct(@PathVariable productId: Int): ResponseEntity<Product> {
-        val product = productService.getProduct()
+
+    if (productId < 1) throw InvalidInputException("Invalid productId: " + productId);
+    if (productId == 13) throw NotFoundException("No product found for productId: " + productId);
+        val product = Product(productId, "name-" + productId, 123, "kk-kk-kk")
+
         return ResponseEntity(product, HttpStatus.OK)
     }
 }
