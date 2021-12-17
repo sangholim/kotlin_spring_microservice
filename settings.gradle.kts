@@ -1,2 +1,2 @@
-rootProject.name = "kotlin_spring_microservice"
-include("product", "review", "recommendation", "product-composite")
+rootProject.name = "micro-services"
+include("product", "review", "recommendation", "product-composite", "utils")

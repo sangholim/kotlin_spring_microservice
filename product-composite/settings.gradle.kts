@@ -1,1 +1,1 @@
-rootProject.name = "product-composite"
+//rootProject.name = "product-composite"
