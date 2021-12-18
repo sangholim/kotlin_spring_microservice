@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-
+	implementation(project(":api","default"))
 	implementation(project(":utils","default"))
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -37,5 +37,12 @@ tasks.withType<KotlinCompile> {
 	kotlinOptions {
 		freeCompilerArgs = listOf("-Xjsr305=strict")
 		jvmTarget = "1.8"
+	}
+}
+
+tasks.test {
+	useJUnitPlatform()
+	filter {
+		includeTestsMatching("com.msa.product.rest.*")
 	}
 }

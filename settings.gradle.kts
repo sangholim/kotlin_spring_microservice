@@ -1,2 +1,8 @@
 rootProject.name = "micro-services"
-include("product", "review", "recommendation", "product-composite", "utils")
+include(
+    "product",
+    "review",
+    "recommendation",
+    "product-composite",
+    "utils",
+    "api")
