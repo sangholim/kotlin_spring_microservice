@@ -1,3 +1,6 @@
+spring:
+  pid:
+    file: recommendation.pid
 server:
   port: 7002
 

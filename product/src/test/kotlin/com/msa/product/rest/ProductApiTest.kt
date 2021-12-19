@@ -7,10 +7,17 @@ class ProductApiTest {
 
     @Test
     fun getProduct() {
-        println(
-            WebClient.builder().baseUrl("http://localhost:7001/product/1")
-                .build().get().retrieve().bodyToMono(Any::class.java).block()
-        )
+        try {
+            println(
+                WebClient.builder().baseUrl("http://localhost:7001/product/1")
+                    .build().get().retrieve().bodyToMono(Any::class.java).block()
+            )
+        } catch (e: Exception) {
+            println(
+                "fail get product > ${e.message}"
+            )
+        }
+
 
     }
 

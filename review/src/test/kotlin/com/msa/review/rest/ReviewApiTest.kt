@@ -7,10 +7,16 @@ class ReviewApiTest {
 
     @Test
     fun getReviews() {
-        println(
-            WebClient.builder()
-                .baseUrl("http://localhost:7003/review?productId=1")
-                .build().get().retrieve().bodyToMono(Any::class.java).block()
-        )
+        try {
+            println(
+                WebClient.builder()
+                    .baseUrl("http://localhost:7003/review?productId=1")
+                    .build().get().retrieve().bodyToMono(Any::class.java).block()
+            )
+        } catch (e: Exception) {
+            println(
+                "fail get reviews > ${e.message}"
+            )
+        }
     }
 }

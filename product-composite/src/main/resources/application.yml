@@ -1,3 +1,7 @@
+spring:
+  pid:
+    file: product-composite.pid
+
 server.port: 7000
 server.error.include-message: always
 
