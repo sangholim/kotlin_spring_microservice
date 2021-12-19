@@ -13,7 +13,12 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.bodyToMono
+import org.springframework.web.server.ResponseStatusException
 import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
+
 
 @Component
 class ProductCompositeIntegration(
@@ -32,24 +37,42 @@ class ProductCompositeIntegration(
     val reviewUrl = "http://$reviewServiceHost:$reviewServicePort/review?productId="
 
     fun integration(productId: Int): ProductAggregate {
-        return Mono.zip(getProduct(productId), getReviews(productId), getRecommendations(productId)).map {
-            val product = it.t1
-            val reviews = it.t2
-            val recommendations = it.t3
-            createProductAggregate(product, recommendations, reviews)
-        }.toFuture().get() ?: ProductAggregate()
+        return Mono.zip(
+            getProduct(productId).subscribeOn(Schedulers.elastic()),
+            getReviews(productId).subscribeOn(Schedulers.elastic()),
+            getRecommendations(productId).subscribeOn(Schedulers.elastic()))
+            .map {
+                val product = it.t1
+                val reviews = it.t2
+                val recommendations = it.t3
+                createProductAggregate(product, recommendations, reviews)
+            }.onErrorResume(WebClientResponseException::class.java) {
+                Mono.error(ResponseStatusException(it.statusCode, it.message))
+            }.toFuture().get() ?: ProductAggregate()
     }
 
-    fun getProduct(productId: Int): Mono<Product> =
-        WebClient.create(productUrl + productId).get().retrieve().bodyToMono(Product::class.java)
+    fun getProduct(productId: Int) =
+        WebClient.create(productUrl + productId)
+            .get()
+            .retrieve()
+            .bodyToMono<Product>()
+            .onErrorResume(WebClientResponseException::class.java) {
+                Mono.error(ResponseStatusException(it.statusCode, it.message))
+            }
 
     fun getReviews(productId: Int): Mono<List<Review>> =
-        WebClient.create(reviewUrl + productId).get().retrieve()
-            .bodyToMono(object : ParameterizedTypeReference<List<Review>>() {})
+        WebClient.create(reviewUrl + productId).get()
+            .retrieve().bodyToMono(object : ParameterizedTypeReference<List<Review>>() {})
+            .onErrorResume(WebClientResponseException::class.java) {
+                Mono.error(ResponseStatusException(it.statusCode, it.message))
+            }
 
     fun getRecommendations(productId: Int): Mono<List<Recommendation>> =
-        WebClient.create(recommendationUrl + productId).get().retrieve()
-            .bodyToMono(object : ParameterizedTypeReference<List<Recommendation>>() {})
+        WebClient.create(recommendationUrl + productId).get()
+            .retrieve().bodyToMono(object : ParameterizedTypeReference<List<Recommendation>>() {})
+            .onErrorResume(WebClientResponseException::class.java) {
+                Mono.error(ResponseStatusException(it.statusCode, it.message))
+            }
 
     fun createProductAggregate(
         product: Product,

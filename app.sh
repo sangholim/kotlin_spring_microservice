@@ -15,6 +15,6 @@ then
 elif [[ "$2" = "stop" ]]
 then
     kill -9 `cat $1/$1.pid`
-    rm "$1/$1.pid"
+    #rm "$1/$1.pid"
 fi
 
