@@ -7,6 +7,7 @@ import com.msa.domain.composite.ServiceAddresses
 import com.msa.domain.product.vo.Product
 import com.msa.domain.recommendation.vo.Recommendation
 import com.msa.domain.review.vo.Review
+import com.msa.util.http.ServiceUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
@@ -21,7 +22,8 @@ class ProductCompositeIntegration(
     @Value("\${app.recommendation-service.host}") recommendationServiceHost: String = "",
     @Value("\${app.recommendation-service.port}") recommendationServicePort: Int = 0,
     @Value("\${app.review-service.host}") reviewServiceHost: String = "",
-    @Value("\${app.review-service.port}") reviewServicePort: Int = 0
+    @Value("\${app.review-service.port}") reviewServicePort: Int = 0,
+    val serviceUtil: ServiceUtil
 ) {
     private val log = LoggerFactory.getLogger(this.javaClass)
 
@@ -32,15 +34,9 @@ class ProductCompositeIntegration(
     fun integration(productId: Int): ProductAggregate {
         return Mono.zip(getProduct(productId), getReviews(productId), getRecommendations(productId)).map {
             val product = it.t1
-            val reviews = it.t2.map { review -> ReviewSummary(review.reviewId, review.author, review.subject) }.toList()
-            val recommendations = it.t3.map { recommendation ->
-                RecommendationSummary(
-                    recommendation.recommendationId,
-                    recommendation.author,
-                    recommendation.rate
-                )
-            }
-            ProductAggregate(productId, product.name, product.weight, recommendations, reviews, ServiceAddresses())
+            val reviews = it.t2
+            val recommendations = it.t3
+            createProductAggregate(product, recommendations, reviews)
         }.toFuture().get() ?: ProductAggregate()
     }
 
@@ -55,4 +51,36 @@ class ProductCompositeIntegration(
         WebClient.create(recommendationUrl + productId).get().retrieve()
             .bodyToMono(object : ParameterizedTypeReference<List<Recommendation>>() {})
 
+    fun createProductAggregate(
+        product: Product,
+        recommendations: List<Recommendation>,
+        reviews: List<Review>
+    ): ProductAggregate {
+        val reviewAddress = reviews[0].serviceAddress
+        val recommendationAddress = recommendations[0].serviceAddress
+        val serviceAddresses = ServiceAddresses(
+            serviceUtil.getServiceAddress(),
+            product.serviceAddress,
+            reviewAddress,
+            recommendationAddress
+        )
+        val reviewSummaries =
+            reviews.map { review -> ReviewSummary(review.reviewId, review.author, review.subject) }.toList()
+        val recommendationSummaries = recommendations.map { recommendation ->
+            RecommendationSummary(
+                recommendation.recommendationId,
+                recommendation.author,
+                recommendation.rate
+            )
+        }
+
+        return ProductAggregate(
+            product.productId,
+            product.name,
+            product.weight,
+            recommendationSummaries,
+            reviewSummaries,
+            serviceAddresses
+        )
+    }
 }

@@ -1,6 +1,8 @@
 package com.msa.recommendation
 
+import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.ApplicationPidFileWriter
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.ComponentScan
 
@@ -9,5 +11,7 @@ import org.springframework.context.annotation.ComponentScan
 class RecommendationApplication
 
 fun main(args: Array<String>) {
-	runApplication<RecommendationApplication>(*args)
+	val application = SpringApplication(RecommendationApplication::class.java)
+	application.addListeners(ApplicationPidFileWriter())
+	application.run(*args)
 }
