@@ -7,13 +7,19 @@ import com.msa.domain.composite.ServiceAddresses
 import com.msa.domain.product.vo.Product
 import com.msa.domain.recommendation.vo.Recommendation
 import com.msa.domain.review.vo.Review
+import com.msa.util.exception.InvalidInputException
+import com.msa.util.exception.NotFoundException
 import com.msa.util.http.ServiceUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.doOnError
+import java.lang.RuntimeException
 
 @Component
 class ProductCompositeIntegration(
@@ -37,6 +43,13 @@ class ProductCompositeIntegration(
             val reviews = it.t2
             val recommendations = it.t3
             createProductAggregate(product, recommendations, reviews)
+        }.doOnError {
+            val webClientResponseException = (it as WebClientResponseException)
+            when (webClientResponseException.statusCode) {
+                HttpStatus.NOT_FOUND -> throw NotFoundException("not found exception")
+                HttpStatus.UNPROCESSABLE_ENTITY -> throw InvalidInputException("invalid input exception")
+                else -> throw RuntimeException(it.localizedMessage)
+            }
         }.toFuture().get() ?: ProductAggregate()
     }
 
@@ -56,8 +69,8 @@ class ProductCompositeIntegration(
         recommendations: List<Recommendation>,
         reviews: List<Review>
     ): ProductAggregate {
-        val reviewAddress = reviews[0].serviceAddress
-        val recommendationAddress = recommendations[0].serviceAddress
+        val reviewAddress = if (reviews.isNotEmpty()) reviews[0].serviceAddress else ""
+        val recommendationAddress = if (recommendations.isNotEmpty()) recommendations[0].serviceAddress else ""
         val serviceAddresses = ServiceAddresses(
             serviceUtil.getServiceAddress(),
             product.serviceAddress,
