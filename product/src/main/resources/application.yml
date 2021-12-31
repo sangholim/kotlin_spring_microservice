@@ -1,8 +1,9 @@
 spring:
+  profile: docker
   pid:
     file: product.pid
 server:
-  port: 7001
+  port: 8080
 
 logging:
   level:
