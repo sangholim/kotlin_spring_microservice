@@ -27,3 +27,7 @@ hs_err_pid*
 /utils/.idea/
 /utils/build/
 /api/build/
+/product-composite/product-composite.pid
+/product/product.pid
+/recommendation/recommendation.pid
+/review/review.pid
