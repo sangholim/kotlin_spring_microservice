@@ -2,6 +2,10 @@
 - 애플리케이션을 신속하게 구축, 테스트 및 배포할 수 있는 소프트웨어 플랫폼
 - 단일 커맨드로 컨테이너들을 통제시 `Docker Compose`
 - 설정값 형식 `Yaml`
+
+### Install
+- https://sinau.tistory.com/42
+
 ### Yaml
 - `build` 마이크로서비스에 사용할 Docker 파일 지정 <br>
   `Docker Compose`을 통해 이미지 빌드, 컨테이너 시작

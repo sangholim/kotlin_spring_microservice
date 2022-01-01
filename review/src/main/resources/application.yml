@@ -1,8 +1,20 @@
 spring:
+  profiles: default
   pid:
     file: review.pid
 server:
   port: 7003
+
+logging:
+  level:
+    root: INFO
+---
+spring:
+  profiles: docker
+  pid:
+    file: review.pid
+server:
+  port: 8080
 
 logging:
   level:
