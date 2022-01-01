@@ -20,6 +20,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.doOnError
 import java.lang.RuntimeException
+import java.time.Duration
 
 @Component
 class ProductCompositeIntegration(
@@ -54,15 +55,15 @@ class ProductCompositeIntegration(
     }
 
     fun getProduct(productId: Int): Mono<Product> =
-        WebClient.create(productUrl + productId).get().retrieve().bodyToMono(Product::class.java)
+        WebClient.create(productUrl + productId).get().retrieve().bodyToMono(Product::class.java).timeout(Duration.ofSeconds(10))
 
     fun getReviews(productId: Int): Mono<List<Review>> =
         WebClient.create(reviewUrl + productId).get().retrieve()
-            .bodyToMono(object : ParameterizedTypeReference<List<Review>>() {})
+            .bodyToMono(object : ParameterizedTypeReference<List<Review>>() {}).timeout(Duration.ofSeconds(10))
 
     fun getRecommendations(productId: Int): Mono<List<Recommendation>> =
         WebClient.create(recommendationUrl + productId).get().retrieve()
-            .bodyToMono(object : ParameterizedTypeReference<List<Recommendation>>() {})
+            .bodyToMono(object : ParameterizedTypeReference<List<Recommendation>>() {}).timeout(Duration.ofSeconds(10))
 
     fun createProductAggregate(
         product: Product,

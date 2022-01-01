@@ -7,30 +7,34 @@ class ProductCompositeApiTest {
 
     @Test
     fun getProductComposite() {
-        val results = mutableListOf<String>()
-        listOf(
-            // product, review, recommendations
-            "1",
-            // 404 not found
-            "13",
-            // empty recommendations
-            "113",
-            // empty reviews
-            "213",
-            // 422
-            "-1"
-        ).forEach {
-            WebClient.builder()
-                .baseUrl("http://localhost:7000/product-composite/${it}")
-                .build().get()
-                .exchange()
-                .flatMap { response: ClientResponse -> response.bodyToMono<Map<*, *>>() }
-                .doOnSuccess { map -> results.add(map.toString()) }
-                .block()
-        }
+        try {
+            val results = mutableListOf<String>()
+            listOf(
+                // product, review, recommendations
+                "1",
+                // 404 not found
+                "13",
+                // empty recommendations
+                "113",
+                // empty reviews
+                "213",
+                // 422
+                "-1"
+            ).forEach {
+                WebClient.builder()
+                    .baseUrl("http://localhost:7000/product-composite/${it}")
+                    .build().get()
+                    .exchange()
+                    .flatMap { response: ClientResponse -> response.bodyToMono<Map<*, *>>() }
+                    .doOnSuccess { map -> results.add(map.toString()) }
+                    .block()
+            }
 
-        results.forEach {
-            println("result > $it")
+            results.forEach {
+                println("result > $it")
+            }
+        } catch (e: Exception) {
+            println(e.message)
         }
     }
 }

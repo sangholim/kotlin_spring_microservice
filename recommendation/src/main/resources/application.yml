@@ -1,8 +1,20 @@
 spring:
+  profiles: default
   pid:
     file: recommendation.pid
 server:
   port: 7002
+
+logging:
+  level:
+    root: INFO
+---
+spring:
+  profiles: docker
+  pid:
+    file: recommendation.pid
+server:
+  port: 8080
 
 logging:
   level:
