@@ -27,4 +27,9 @@
   커맨드를 종료하지 않고 새 메시지를 기다린다. `-f`
   새 로그 메시지 확인 `--tail=0`
     
+### Issue
+- `docker-compose up -d` 는 기존의 이미지가 있다면 새로 빌드하지 않는거 같음
+- `docker-compose up --force-recreate --build -d`: 새로 이미지 빌드
+- `docker image prune -f` : 기존 이미지 제거
+
 
