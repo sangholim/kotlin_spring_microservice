@@ -26,8 +26,6 @@ dependencies {
 	implementation("io.springfox:springfox-boot-starter:3.0.0")
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 	implementation("org.mapstruct:mapstruct:1.3.1.Final")
-	implementation("junit:junit:4.13.1")
-
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

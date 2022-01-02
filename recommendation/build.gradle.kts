@@ -61,6 +61,6 @@ tasks.withType<KotlinCompile> {
 tasks.test {
 	useJUnitPlatform()
 	filter {
-		includeTestsMatching("com.msa.recommendation.rest.*")
+		includeTestsMatching("com.msa.recommendation*")
 	}
 }

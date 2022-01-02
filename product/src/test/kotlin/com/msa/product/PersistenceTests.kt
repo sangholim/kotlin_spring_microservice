@@ -2,11 +2,12 @@ package com.msa.product
 
 import com.msa.product.persistence.ProductEntity
 import com.msa.product.persistence.ProductRepository
-import org.junit.Assert.*
-import org.junit.Before
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.fail
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
 import org.springframework.dao.DuplicateKeyException
@@ -14,13 +15,12 @@ import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
-import org.springframework.test.context.junit4.SpringRunner
-import java.util.*
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.util.stream.Collectors
 import java.util.stream.IntStream
 
 
-@RunWith(SpringRunner::class)
+@ExtendWith(SpringExtension::class)
 @DataMongoTest
 class PersistenceTests {
     @Autowired
