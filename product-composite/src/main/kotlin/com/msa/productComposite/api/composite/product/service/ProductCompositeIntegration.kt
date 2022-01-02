@@ -10,6 +10,7 @@ import com.msa.domain.review.vo.Review
 import com.msa.util.exception.InvalidInputException
 import com.msa.util.exception.NotFoundException
 import com.msa.util.http.ServiceUtil
+import io.swagger.annotations.Api
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
@@ -18,11 +19,11 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
-import reactor.kotlin.core.publisher.doOnError
 import java.lang.RuntimeException
 import java.time.Duration
 
 @Component
+@Api(description = "REST API for composite product information")
 class ProductCompositeIntegration(
     @Value("\${app.product-service.host}") productServiceHost: String = "",
     @Value("\${app.product-service.port}") productServicePort: Int = 0,
