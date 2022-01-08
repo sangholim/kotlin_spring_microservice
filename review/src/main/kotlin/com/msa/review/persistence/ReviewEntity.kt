@@ -5,13 +5,13 @@ import javax.persistence.*
 @Entity
 @Table(
     name = "reviews",
-    indexes = [Index(name = "reviews_unique_idex", unique = true, columnList = "productId,reviewId")]
+    indexes = [Index(name = "reviews_unique_index", unique = true, columnList = "productId,reviewId")]
 )
 class ReviewEntity {
 
     @Id
     @GeneratedValue
-    var id: Int = 0
+    var id: Int? = null
 
     @Version
     var version: Int = 0

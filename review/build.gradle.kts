@@ -5,7 +5,15 @@ plugins {
 	id("io.spring.dependency-management") version "1.0.9.RELEASE"
 	kotlin("jvm") version "1.3.72"
 	kotlin("plugin.spring") version "1.3.72"
+	kotlin("plugin.jpa") version "1.3.72"
+	kotlin("plugin.allopen") version "1.3.72"
 	kotlin("kapt") version "1.3.72"
+}
+
+allOpen {
+	annotation("javax.persistence.Entity")
+	annotation("javax.persistence.Embeddable")
+	annotation("javax.persistence.MappedSuperclass")
 }
 
 repositories {
@@ -29,6 +37,7 @@ dependencies {
 	implementation("org.mapstruct:mapstruct:1.3.1.Final")
 
 
+	testImplementation("org.hamcrest:hamcrest-junit:2.0.0.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
@@ -63,6 +72,6 @@ tasks.withType<KotlinCompile> {
 tasks.test {
 	useJUnitPlatform()
 	filter {
-		includeTestsMatching("com.msa.review.rest.*")
+		includeTestsMatching("com.msa.review.*")
 	}
 }
