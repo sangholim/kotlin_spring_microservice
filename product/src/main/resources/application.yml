@@ -2,6 +2,12 @@ spring:
   profiles: default
   pid:
     file: product.pid
+  data:
+  mongodb:
+    host: localhost
+    port: 27017
+    database: product-db
+
 server:
   port: 7001
 
@@ -15,6 +21,8 @@ spring:
     file: product.pid
 server:
   port: 8080
+
+spring.data.mongodb.host: mongodb
 
 logging:
   level:

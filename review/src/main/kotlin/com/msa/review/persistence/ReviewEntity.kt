@@ -5,7 +5,7 @@ import javax.persistence.*
 @Entity
 @Table(
     name = "reviews",
-    indexes = [Index(name = "reviews_unique_index", unique = true, columnList = "productId,reviewId")]
+    indexes = [Index(name = "reviews_unique_idx", unique = true, columnList = "productId,reviewId")]
 )
 class ReviewEntity {
 
