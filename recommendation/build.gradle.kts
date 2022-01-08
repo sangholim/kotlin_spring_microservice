@@ -5,6 +5,7 @@ plugins {
 	id("io.spring.dependency-management") version "1.0.9.RELEASE"
 	kotlin("jvm") version "1.3.72"
 	kotlin("plugin.spring") version "1.3.72"
+	kotlin("kapt") version "1.3.72"
 }
 
 repositories {
@@ -23,12 +24,27 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 	implementation("io.springfox:springfox-boot-starter:3.0.0")
+	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+	implementation("org.mapstruct:mapstruct:1.3.1.Final")
+
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
 	testImplementation("io.projectreactor:reactor-test")
+	testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
+	kapt("org.mapstruct:mapstruct-processor:1.3.1.Final")
+
 }
 
+kapt {
+	arguments {
+		// Set Mapstruct Configuration options here
+		// https://kotlinlang.org/docs/reference/kapt.html#annotation-processor-arguments
+		// https://mapstruct.org/documentation/stable/reference/html/#configuration-options
+		// arg("mapstruct.defaultComponentModel", "spring")
+	}
+}
 
 tasks.withType<JavaCompile> {
 	sourceCompatibility = "1.8"
@@ -45,6 +61,6 @@ tasks.withType<KotlinCompile> {
 tasks.test {
 	useJUnitPlatform()
 	filter {
-		includeTestsMatching("com.msa.recommendation.rest.*")
+		includeTestsMatching("com.msa.recommendation*")
 	}
 }
