@@ -2,6 +2,19 @@ spring:
   profiles: default
   pid:
     file: review.pid
+
+# Strongly recommend to set this property to "none" in a production environment!
+  jpa:
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:mysql://localhost/review-db
+    username: user
+    password: pwd
+
+spring.datasource.hikari.initializationFailTimeout: 60000
+
+
 server:
   port: 7003
 

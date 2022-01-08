@@ -8,6 +8,12 @@ plugins {
 	kotlin("kapt") version "1.3.72"
 }
 
+allOpen {
+	annotation("javax.persistence.Entity")
+	annotation("javax.persistence.Embeddable")
+	annotation("javax.persistence.MappedSuperclass")
+}
+
 repositories {
 	mavenCentral()
 }
@@ -27,6 +33,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 	implementation("org.mapstruct:mapstruct:1.3.1.Final")
 
+	testImplementation("org.hamcrest:hamcrest-junit:2.0.0.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
