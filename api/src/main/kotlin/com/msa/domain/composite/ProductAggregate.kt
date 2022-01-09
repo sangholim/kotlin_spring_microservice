@@ -4,9 +4,9 @@ class ProductAggregate(
     var productId: Int = 0,
     var name: String = "",
     var weight: Int = 0,
-    var recommendations: List<RecommendationSummary> = listOf(),
-    var reviews: List<ReviewSummary> = listOf(),
-    var serviceAddresses: ServiceAddresses = ServiceAddresses()
+    var recommendations: List<RecommendationSummary>? = listOf(),
+    var reviews: List<ReviewSummary>? = listOf(),
+    var serviceAddresses: ServiceAddresses? = ServiceAddresses()
 )
 
 class ServiceAddresses(
@@ -19,12 +19,14 @@ class ServiceAddresses(
 class ReviewSummary(
     var reviewId: Int = 0,
     var author: String = "",
-    var subject: String = ""
+    var subject: String = "",
+    var content: String = ""
 )
 
 
 class RecommendationSummary(
     var recommendationId: Int = 0,
     var author: String = "",
+    var content: String = "",
     var rate: Int = 0
 )

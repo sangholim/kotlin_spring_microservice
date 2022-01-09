@@ -32,4 +32,23 @@
 - `docker-compose up --force-recreate --build -d`: 새로 이미지 빌드
 - `docker image prune -f` : 기존 이미지 제거
 
-
+### DataBase CLI
+#### Mongodb
+- `docker-compose exec mongodb mongo --quiet`
+- 질의
+```sql
+docker-compose exec mongodb mongo product-db --quiet --eval "db.products.find()"
+docker-compose exec mongodb mongo recommendation-db --quiet --eval "db.recommendation.find()"
+ 
+```
+#### Mysql
+- `docker-compose exec mysql mysql -u{username} -p ${db-name}`
+- 권한 부여
+```sql
+GRANT ALL PRIVILEGES ON *.* TO user@'%' IDENTIFIED BY 'pwd';
+FLUSH privileges;
+```
+- 질의
+```sql
+docker-compose exec mysql mysql -uuser -p review-db -e "select * from reviews"
+```

@@ -2,7 +2,6 @@ spring:
   profiles: default
   pid:
     file: review.pid
-
 # Strongly recommend to set this property to "none" in a production environment!
   jpa:
     hibernate:
@@ -13,7 +12,6 @@ spring:
     password: pwd
 
 spring.datasource.hikari.initializationFailTimeout: 60000
-
 
 server:
   port: 7003
@@ -26,6 +24,16 @@ spring:
   profiles: docker
   pid:
     file: review.pid
+  jpa:
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:mysql://mysql/review-db
+    username: user
+    password: pwd
+
+spring.datasource.hikari.initializationFailTimeout: 60000
+
 server:
   port: 8080
 

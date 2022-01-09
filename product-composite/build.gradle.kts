@@ -23,6 +23,9 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 	implementation("io.springfox:springfox-boot-starter:3.0.0")
+
+	// https://mvnrepository.com/artifact/org.mockito/mockito-all
+	testImplementation("org.mockito:mockito-all:1.10.19")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
@@ -41,10 +44,11 @@ tasks.withType<KotlinCompile> {
 		jvmTarget = "1.8"
 	}
 }
-
+/*
 tasks.test {
 	useJUnitPlatform()
 	filter {
-		includeTestsMatching("com.msa.productComposite.*")
+		includeTestsMatching("com.msa.*")
 	}
 }
+ */
