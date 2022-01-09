@@ -3,10 +3,10 @@ spring:
   pid:
     file: product.pid
   data:
-  mongodb:
-    host: localhost
-    port: 27017
-    database: product-db
+    mongodb:
+      host: localhost
+      port: 27017
+      database: product-db
 
 server:
   port: 7001
@@ -19,10 +19,11 @@ spring:
   profiles: docker
   pid:
     file: product.pid
+  data:
+    mongodb:
+      host: mongodb
 server:
   port: 8080
-
-spring.data.mongodb.host: mongodb
 
 logging:
   level:

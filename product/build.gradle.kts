@@ -63,10 +63,11 @@ tasks.withType<KotlinCompile> {
 		jvmTarget = "1.8"
 	}
 }
-
+/*
 tasks.test {
 	useJUnitPlatform()
 	filter {
 		includeTestsMatching("com.msa.*")
 	}
 }
+ */

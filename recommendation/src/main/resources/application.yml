@@ -2,6 +2,12 @@ spring:
   profiles: default
   pid:
     file: recommendation.pid
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: product-db
+
 server:
   port: 7002
 
@@ -13,6 +19,10 @@ spring:
   profiles: docker
   pid:
     file: recommendation.pid
+  data:
+    mongodb:
+      host: mongodb
+
 server:
   port: 8080
 

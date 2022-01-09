@@ -83,7 +83,9 @@ class PersistenceTests {
             this.name = "n"
             this.weight = 1
         }//ProductEntity(savedEntity!!.productId, "n", 1)
-        repository!!.save(entity)
+        org.junit.jupiter.api.assertThrows<DuplicateKeyException> {
+            repository!!.save(entity)
+        }
     }
 
     @Test

@@ -15,10 +15,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
+import reactor.core.publisher.Mono.just
 import java.lang.RuntimeException
 import java.time.Duration
 
@@ -36,8 +38,8 @@ class ProductCompositeIntegration(
     private val log = LoggerFactory.getLogger(this.javaClass)
 
     val productUrl = "http://$productServiceHost:$productServicePort/product/"
-    val recommendationUrl = "http://$recommendationServiceHost:$recommendationServicePort/recommendation?productId="
-    val reviewUrl = "http://$reviewServiceHost:$reviewServicePort/review?productId="
+    val recommendationUrl = "http://$recommendationServiceHost:$recommendationServicePort/recommendation"
+    val reviewUrl = "http://$reviewServiceHost:$reviewServicePort/review"
 
     fun integration(productId: Int): ProductAggregate {
         return Mono.zip(getProduct(productId), getReviews(productId), getRecommendations(productId)).map {
@@ -55,16 +57,83 @@ class ProductCompositeIntegration(
         }.toFuture().get() ?: ProductAggregate()
     }
 
+    fun <T> webClientResponseHandler(response: Mono<T>): T? = try {
+        response.toFuture().get()
+    } catch (e: WebClientResponseException) {
+        when (e.statusCode) {
+            HttpStatus.BAD_REQUEST -> throw NotFoundException("bad request")
+            HttpStatus.NOT_FOUND -> throw NotFoundException("not found")
+            HttpStatus.UNPROCESSABLE_ENTITY -> throw InvalidInputException("unprocessable entity")
+            else -> throw RuntimeException(e.localizedMessage)
+        }
+    }
+
+    fun createProduct(product: Product) =
+        webClientResponseHandler(
+            WebClient.create(productUrl).post()
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(just(product), Product::class.java)
+                .retrieve()
+                .toBodilessEntity()
+                .timeout(Duration.ofSeconds(60))
+        )
+
+    fun deleteProduct(productId: Int) =
+        webClientResponseHandler(
+            WebClient.create(productUrl).delete()
+                .retrieve()
+                .toBodilessEntity()
+                .timeout(Duration.ofSeconds(60))
+        )
+
+
+    fun deleteRecommendations(productId: Int) = webClientResponseHandler(
+        WebClient.create(recommendationUrl)
+            .delete()
+            .retrieve()
+            .toBodilessEntity()
+            .timeout(Duration.ofSeconds(60))
+    )
+
+    fun deleteReviews(productId: Int) = webClientResponseHandler(
+        WebClient.create(reviewUrl).delete()
+            .retrieve()
+            .toBodilessEntity()
+            .timeout(Duration.ofSeconds(60))
+    )
+
+    fun createRecommendation(recommendation: Recommendation) = webClientResponseHandler(
+        WebClient.create(recommendationUrl).post()
+            .accept(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(just(recommendation), Recommendation::class.java)
+            .retrieve()
+            .toBodilessEntity()
+            .timeout(Duration.ofSeconds(60))
+    )
+
+    fun createReview(review: Review) = webClientResponseHandler(
+        WebClient.create(reviewUrl).post()
+            .accept(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(just(review), Review::class.java)
+            .retrieve()
+            .toBodilessEntity()
+            .timeout(Duration.ofSeconds(60))
+    )
+
     fun getProduct(productId: Int): Mono<Product> =
-        WebClient.create(productUrl + productId).get().retrieve().bodyToMono(Product::class.java).timeout(Duration.ofSeconds(10))
+        WebClient.create(productUrl + productId).get().retrieve().bodyToMono(Product::class.java)
+            .timeout(Duration.ofSeconds(60))
 
     fun getReviews(productId: Int): Mono<List<Review>> =
-        WebClient.create(reviewUrl + productId).get().retrieve()
-            .bodyToMono(object : ParameterizedTypeReference<List<Review>>() {}).timeout(Duration.ofSeconds(10))
+        WebClient.create("$reviewUrl?productId=$productId").get().retrieve()
+            .bodyToMono(object : ParameterizedTypeReference<List<Review>>() {}).timeout(Duration.ofSeconds(60))
 
     fun getRecommendations(productId: Int): Mono<List<Recommendation>> =
-        WebClient.create(recommendationUrl + productId).get().retrieve()
-            .bodyToMono(object : ParameterizedTypeReference<List<Recommendation>>() {}).timeout(Duration.ofSeconds(10))
+        WebClient.create("$recommendationUrl?productId=$productId").get().retrieve()
+            .bodyToMono(object : ParameterizedTypeReference<List<Recommendation>>() {}).timeout(Duration.ofSeconds(60))
 
     fun createProductAggregate(
         product: Product,
@@ -85,6 +154,7 @@ class ProductCompositeIntegration(
             RecommendationSummary(
                 recommendation.recommendationId,
                 recommendation.author,
+                recommendation.content,
                 recommendation.rate
             )
         }

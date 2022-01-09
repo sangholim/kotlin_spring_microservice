@@ -12,6 +12,7 @@ import org.springframework.dao.OptimisticLockingFailureException
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.fail
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.test.context.junit.jupiter.SpringExtension
@@ -86,7 +87,9 @@ class PersistenceTests {
             this.rating = 3
             this.content = "c"
         } //RecommendationEntity(1, 2, "a", 3, "c")
-        repository!!.save(entity)
+        assertThrows<DuplicateKeyException> {
+            repository!!.save(entity)
+        }
     }
 
     @Test
