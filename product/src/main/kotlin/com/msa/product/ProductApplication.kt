@@ -8,7 +8,7 @@ import org.springframework.boot.context.ApplicationPidFileWriter
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.context.event.EventListener
-import org.springframework.data.mongodb.core.MongoOperations
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.index.IndexDefinition
 import org.springframework.data.mongodb.core.index.IndexResolver
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver
@@ -18,15 +18,16 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexRes
 @ComponentScan(basePackages = ["com.msa.product", "com.msa.util"])
 class ProductApplication {
 
+
     @Autowired
-    var mongoTemplate: MongoOperations? = null
+    lateinit var reactiveMongoTemplate: ReactiveMongoTemplate
 
     @EventListener(ContextRefreshedEvent::class)
     fun initIndicesAfterStartup() {
-        val mappingContext = mongoTemplate!!.converter.mappingContext
+        val mappingContext = reactiveMongoTemplate.converter.mappingContext
         val resolver: IndexResolver = MongoPersistentEntityIndexResolver(mappingContext)
-        val indexOps = mongoTemplate!!.indexOps(ProductEntity::class.java)
-        resolver.resolveIndexFor(ProductEntity::class.java).forEach { e: IndexDefinition? -> indexOps.ensureIndex(e!!) }
+        val indexOps = reactiveMongoTemplate.indexOps(ProductEntity::class.java)
+        resolver.resolveIndexFor(ProductEntity::class.java).forEach { e: IndexDefinition -> indexOps.ensureIndex(e).block() }
     }
 
 }
