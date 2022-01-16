@@ -1,20 +1,26 @@
 package com.msa.recommendation
 
+import com.msa.domain.event.Event
 import com.msa.domain.recommendation.vo.Recommendation
 import com.msa.recommendation.persistence.RecommendationRepository
-import io.netty.handler.codec.http.HttpResponseStatus.UNPROCESSABLE_ENTITY
-import org.junit.jupiter.api.Assertions.*
+import com.msa.util.exception.InvalidInputException
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.cloud.stream.messaging.Sink
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType.APPLICATION_JSON
+import org.springframework.messaging.MessagingException
+import org.springframework.messaging.SubscribableChannel
+import org.springframework.messaging.support.GenericMessage
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.WebTestClient.BodyContentSpec
 import reactor.core.publisher.Mono.just
+import kotlin.test.fail
 
 
 @ExtendWith(value = [SpringExtension::class])
@@ -30,18 +36,26 @@ class RecommendationServiceApplicationTests {
     @Autowired
     private lateinit var repository: RecommendationRepository
 
+    @Autowired
+    private lateinit var channels: Sink
+
+    private lateinit var input: SubscribableChannel
+
+
+
     @BeforeEach
     fun setupDb() {
-        repository.deleteAll()
+        input = channels.input() as SubscribableChannel
+        repository.deleteAll().block()
     }
 
     @Test
     fun getRecommendationsByProductId() {
         val productId = 1
-        postAndVerifyRecommendation(productId, 1, HttpStatus.OK)
-        postAndVerifyRecommendation(productId, 2, HttpStatus.OK)
-        postAndVerifyRecommendation(productId, 3, HttpStatus.OK)
-        assertEquals(3, repository.findByProductId(productId).size)
+        sendCreateRecommendationEvent(productId, 1)
+        sendCreateRecommendationEvent(productId, 2)
+        sendCreateRecommendationEvent(productId, 3)
+        assertEquals(3, repository.findByProductId(productId).count().block()!!)
 
         getAndVerifyRecommendationsByProductId(productId, HttpStatus.OK)
             .jsonPath("$.length()").isEqualTo(3)
@@ -53,27 +67,32 @@ class RecommendationServiceApplicationTests {
     fun duplicateError() {
         val productId = 1
         val recommendationId = 1
-        postAndVerifyRecommendation(productId, recommendationId, HttpStatus.OK)
-            .jsonPath("$.productId").isEqualTo(productId)
-            .jsonPath("$.recommendationId").isEqualTo(recommendationId)
-        assertEquals(1, repository.count())
 
-        postAndVerifyRecommendation(productId, recommendationId, HttpStatus.UNPROCESSABLE_ENTITY)
-            .jsonPath("$.path").isEqualTo("/recommendation")
-            .jsonPath("$.message")
-            .isEqualTo("Duplicate key, Product Id: $productId Recommendation Id: $recommendationId")
-        assertEquals(1, repository.count())
+        sendCreateRecommendationEvent(productId, recommendationId);
+        assertEquals(1, repository.count().block()!!)
 
+        try {
+            sendCreateRecommendationEvent(productId, recommendationId)
+            fail("Expected a MessagingException here!")
+        } catch (me: MessagingException) {
+            if (me.cause is InvalidInputException) {
+                val iie = me.cause as InvalidInputException?
+                assertEquals("Duplicate key, Product Id: 1 Recommendation Id: 1", iie!!.message)
+            } else {
+                fail("Expected a InvalidInputException as the root cause!")
+            }
+        }
     }
 
     @Test
     fun deleteRecommendations() {
         val productId = 1
         val recommendationId = 1
-        postAndVerifyRecommendation(productId, recommendationId, HttpStatus.OK)
-        assertEquals(1, repository.findByProductId(productId).size)
-        deleteAndVerifyRecommendationsByProductId(productId, HttpStatus.OK)
-        assertEquals(0, repository.findByProductId(productId).size)
+
+        sendCreateRecommendationEvent(productId, recommendationId);
+        assertEquals(1, repository.findByProductId(productId).count().block()!!)
+        sendDeleteRecommendationEvent(productId)
+        assertEquals(0, repository.findByProductId(productId).count().block()!!)
 
     }
 
@@ -157,5 +176,19 @@ class RecommendationServiceApplicationTests {
             .exchange()
             .expectStatus().isEqualTo(expectedStatus)
             .expectBody()
+    }
+
+    private fun sendCreateRecommendationEvent(productId: Int, recommendationId: Int) {
+        val recommendation = Recommendation(
+            productId, recommendationId,
+            "Author $recommendationId", recommendationId, "Content $recommendationId", "SA"
+        )
+        val event: Event<Int, Recommendation> = Event(Event.Type.CREATE, productId, recommendation)
+        input.send(GenericMessage<Any>(event))
+    }
+
+    private fun sendDeleteRecommendationEvent(productId: Int) {
+        val event: Event<Int, Recommendation> = Event(Event.Type.DELETE, productId, null)
+        input.send(GenericMessage<Any>(event))
     }
 }

@@ -1,9 +1,10 @@
 package com.msa.recommendation.persistence
 
-import org.springframework.data.repository.PagingAndSortingRepository
+import org.springframework.data.repository.reactive.ReactiveCrudRepository
 import org.springframework.transaction.annotation.Transactional
+import reactor.core.publisher.Flux
 
-interface RecommendationRepository : PagingAndSortingRepository<RecommendationEntity, String> {
+interface RecommendationRepository : ReactiveCrudRepository<RecommendationEntity, String> {
     @Transactional(readOnly = true)
-    fun findByProductId(productId: Int): List<RecommendationEntity>
+    fun findByProductId(productId: Int): Flux<RecommendationEntity>
 }

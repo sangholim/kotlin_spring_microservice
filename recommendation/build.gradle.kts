@@ -18,6 +18,10 @@ dependencies {
 	implementation(project(":utils","default"))
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
+	implementation("org.springframework.cloud:spring-cloud-starter-stream-rabbit")
+	implementation("org.springframework.cloud:spring-cloud-starter-stream-kafka")
+
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -27,14 +31,22 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 	implementation("org.mapstruct:mapstruct:1.3.1.Final")
 
-
+	testImplementation(kotlin("test"))
+	testImplementation("org.hamcrest:hamcrest-junit:2.0.0.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
+
+	testImplementation("org.springframework.cloud:spring-cloud-stream-test-support")
 	testImplementation("io.projectreactor:reactor-test")
 	testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
 	kapt("org.mapstruct:mapstruct-processor:1.3.1.Final")
+}
 
+dependencyManagement {
+	imports {
+		mavenBom ("org.springframework.cloud:spring-cloud-dependencies:Hoxton.SR6")
+	}
 }
 
 kapt {
@@ -57,11 +69,13 @@ tasks.withType<KotlinCompile> {
 		jvmTarget = "1.8"
 	}
 }
-/*
+
+
 tasks.test {
+	maxParallelForks = 3
+	setForkEvery(1)
 	useJUnitPlatform()
 	filter {
-		includeTestsMatching("com.msa.recommendation*")
+		includeTestsMatching("com.msa.*")
 	}
 }
- */
