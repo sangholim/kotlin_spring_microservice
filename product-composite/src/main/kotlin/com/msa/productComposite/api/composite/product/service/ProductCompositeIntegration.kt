@@ -1,27 +1,29 @@
 package com.msa.productComposite.api.composite.product.service
 
-import com.msa.domain.composite.ProductAggregate
-import com.msa.domain.composite.RecommendationSummary
-import com.msa.domain.composite.ReviewSummary
-import com.msa.domain.composite.ServiceAddresses
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.msa.domain.event.Event
 import com.msa.domain.product.vo.Product
 import com.msa.domain.recommendation.vo.Recommendation
 import com.msa.domain.review.vo.Review
 import com.msa.util.exception.InvalidInputException
 import com.msa.util.exception.NotFoundException
+import com.msa.util.http.HttpErrorInfo
 import com.msa.util.http.ServiceUtil
 import io.swagger.annotations.Api
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.core.ParameterizedTypeReference
+import org.springframework.boot.actuate.health.Health
+import org.springframework.cloud.stream.annotation.Output
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
+import org.springframework.messaging.MessageChannel
+import org.springframework.messaging.support.MessageBuilder
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.core.publisher.Mono.just
-import java.lang.RuntimeException
+import reactor.core.publisher.Mono.empty
+import java.io.IOException
 import java.time.Duration
 
 @Component
@@ -33,139 +35,129 @@ class ProductCompositeIntegration(
     @Value("\${app.recommendation-service.port}") recommendationServicePort: Int = 0,
     @Value("\${app.review-service.host}") reviewServiceHost: String = "",
     @Value("\${app.review-service.port}") reviewServicePort: Int = 0,
+    private val messageSources: MessageSources,
     val serviceUtil: ServiceUtil
 ) {
     private val log = LoggerFactory.getLogger(this.javaClass)
-
+    private val objectMapper = jacksonObjectMapper()
     val productUrl = "http://$productServiceHost:$productServicePort/product/"
     val recommendationUrl = "http://$recommendationServiceHost:$recommendationServicePort/recommendation"
     val reviewUrl = "http://$reviewServiceHost:$reviewServicePort/review"
 
-    fun integration(productId: Int): ProductAggregate {
-        return Mono.zip(getProduct(productId), getReviews(productId), getRecommendations(productId)).map {
-            val product = it.t1
-            val reviews = it.t2
-            val recommendations = it.t3
-            createProductAggregate(product, recommendations, reviews)
-        }.doOnError {
-            val webClientResponseException = (it as WebClientResponseException)
-            when (webClientResponseException.statusCode) {
-                HttpStatus.NOT_FOUND -> throw NotFoundException("not found exception")
-                HttpStatus.UNPROCESSABLE_ENTITY -> throw InvalidInputException("invalid input exception")
-                else -> throw RuntimeException(it.localizedMessage)
-            }
-        }.toFuture().get() ?: ProductAggregate()
-    }
-
-    fun <T> webClientResponseHandler(response: Mono<T>): T? = try {
-        response.toFuture().get()
-    } catch (e: WebClientResponseException) {
-        when (e.statusCode) {
-            HttpStatus.BAD_REQUEST -> throw NotFoundException("bad request")
-            HttpStatus.NOT_FOUND -> throw NotFoundException("not found")
-            HttpStatus.UNPROCESSABLE_ENTITY -> throw InvalidInputException("unprocessable entity")
-            else -> throw RuntimeException(e.localizedMessage)
-        }
-    }
-
-    fun createProduct(product: Product) =
-        webClientResponseHandler(
-            WebClient.create(productUrl).post()
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(just(product), Product::class.java)
-                .retrieve()
-                .toBodilessEntity()
-                .timeout(Duration.ofSeconds(60))
-        )
-
-    fun deleteProduct(productId: Int) =
-        webClientResponseHandler(
-            WebClient.create(productUrl).delete()
-                .retrieve()
-                .toBodilessEntity()
-                .timeout(Duration.ofSeconds(60))
-        )
-
-
-    fun deleteRecommendations(productId: Int) = webClientResponseHandler(
-        WebClient.create(recommendationUrl)
-            .delete()
-            .retrieve()
-            .toBodilessEntity()
-            .timeout(Duration.ofSeconds(60))
-    )
-
-    fun deleteReviews(productId: Int) = webClientResponseHandler(
-        WebClient.create(reviewUrl).delete()
-            .retrieve()
-            .toBodilessEntity()
-            .timeout(Duration.ofSeconds(60))
-    )
-
-    fun createRecommendation(recommendation: Recommendation) = webClientResponseHandler(
-        WebClient.create(recommendationUrl).post()
-            .accept(MediaType.APPLICATION_JSON)
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(just(recommendation), Recommendation::class.java)
-            .retrieve()
-            .toBodilessEntity()
-            .timeout(Duration.ofSeconds(60))
-    )
-
-    fun createReview(review: Review) = webClientResponseHandler(
-        WebClient.create(reviewUrl).post()
-            .accept(MediaType.APPLICATION_JSON)
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(just(review), Review::class.java)
-            .retrieve()
-            .toBodilessEntity()
-            .timeout(Duration.ofSeconds(60))
-    )
-
     fun getProduct(productId: Int): Mono<Product> =
         WebClient.create(productUrl + productId).get().retrieve().bodyToMono(Product::class.java)
             .timeout(Duration.ofSeconds(60))
+            .onErrorMap(WebClientResponseException::class.java) { ex -> handleException(ex) }
 
-    fun getReviews(productId: Int): Mono<List<Review>> =
-        WebClient.create("$reviewUrl?productId=$productId").get().retrieve()
-            .bodyToMono(object : ParameterizedTypeReference<List<Review>>() {}).timeout(Duration.ofSeconds(60))
+    fun createProduct(product: Product): Product {
+        messageSources.outputProducts()
+            .send(MessageBuilder.withPayload(Event(Event.Type.CREATE, product.productId, product)).build())
+        return product
+    }
 
-    fun getRecommendations(productId: Int): Mono<List<Recommendation>> =
+    fun deleteProduct(productId: Int) {
+        messageSources.outputProducts()
+            .send(MessageBuilder.withPayload(Event(Event.Type.DELETE, productId, null)).build())
+    }
+
+    fun getRecommendations(productId: Int): Flux<Recommendation> =
         WebClient.create("$recommendationUrl?productId=$productId").get().retrieve()
-            .bodyToMono(object : ParameterizedTypeReference<List<Recommendation>>() {}).timeout(Duration.ofSeconds(60))
+            .bodyToFlux(Recommendation::class.java).timeout(Duration.ofSeconds(60))
+            .onErrorResume { empty() }
 
-    fun createProductAggregate(
-        product: Product,
-        recommendations: List<Recommendation>,
-        reviews: List<Review>
-    ): ProductAggregate {
-        val reviewAddress = if (reviews.isNotEmpty()) reviews[0].serviceAddress else ""
-        val recommendationAddress = if (recommendations.isNotEmpty()) recommendations[0].serviceAddress else ""
-        val serviceAddresses = ServiceAddresses(
-            serviceUtil.getServiceAddress(),
-            product.serviceAddress,
-            reviewAddress,
-            recommendationAddress
-        )
-        val reviewSummaries =
-            reviews.map { review -> ReviewSummary(review.reviewId, review.author, review.subject) }.toList()
-        val recommendationSummaries = recommendations.map { recommendation ->
-            RecommendationSummary(
-                recommendation.recommendationId,
-                recommendation.author,
-                recommendation.content,
-                recommendation.rate
+
+    fun createRecommendation(recommendation: Recommendation): Recommendation {
+        messageSources.outputRecommendations()
+            .send(
+                MessageBuilder.withPayload(Event(Event.Type.CREATE, recommendation.productId, recommendation)).build()
             )
-        }
+        return recommendation
+    }
 
-        return ProductAggregate(
-            product.productId,
-            product.name,
-            product.weight,
-            recommendationSummaries,
-            reviewSummaries,
-            serviceAddresses
-        )
+    fun deleteRecommendations(productId: Int) {
+        messageSources.outputRecommendations()
+            .send(MessageBuilder.withPayload(Event(Event.Type.DELETE, productId, null)).build())
+    }
+
+    fun getReviews(productId: Int): Flux<Review> =
+        WebClient.create("$reviewUrl?productId=$productId").get().retrieve()
+            .bodyToFlux(Review::class.java)
+            .timeout(Duration.ofSeconds(60))
+            .onErrorResume { empty() }
+
+    fun deleteReviews(productId: Int) {
+        messageSources.outputReviews()
+            .send(MessageBuilder.withPayload(Event(Event.Type.DELETE, productId, null)).build())
+    }
+
+    fun createReview(review: Review): Review {
+        messageSources.outputReviews()
+            .send(
+                MessageBuilder.withPayload(Event(Event.Type.CREATE, review.productId, review)).build()
+            )
+        return review
+    }
+
+    fun getProductHealth(): Mono<Health> {
+        return getHealth(productUrl)
+    }
+
+    fun getRecommendationHealth(): Mono<Health> {
+        return getHealth(recommendationUrl)
+    }
+
+    fun getReviewHealth(): Mono<Health> {
+        return getHealth(reviewUrl)
+    }
+
+    private fun getHealth(url: String): Mono<Health> {
+        log.debug("Will call the Health API on URL: {}", url)
+        return WebClient.create("$url/actuator/health").get().retrieve().bodyToMono(String::class.java)
+            .map { s -> Health.Builder().up().build() }
+            .onErrorResume { ex -> Mono.just(Health.Builder().down(ex).build()) }
+    }
+
+
+    private fun handleException(ex: Throwable): Throwable {
+        if (ex !is WebClientResponseException) {
+            log.warn("Got a unexpected error: ${ex.message}, will rethrow it")
+            return ex
+        }
+        val wcre = ex
+        return when (wcre.statusCode) {
+            HttpStatus.NOT_FOUND -> NotFoundException(getErrorMessage(wcre))
+            HttpStatus.UNPROCESSABLE_ENTITY -> InvalidInputException(getErrorMessage(wcre))
+            else -> {
+                log.warn("Got a unexpected HTTP error: ${wcre.statusCode}, will rethrow it")
+                log.warn("Error body: ${wcre.responseBodyAsString}")
+                ex
+            }
+        }
+    }
+
+    private fun getErrorMessage(ex: WebClientResponseException): String {
+        return try {
+            objectMapper.readValue(ex.responseBodyAsString, HttpErrorInfo::class.java).message
+        } catch (ioex: IOException) {
+            ex.message!!
+        }
+    }
+
+    interface MessageSources {
+        @Output(OUTPUT_PRODUCTS)
+        fun outputProducts(): MessageChannel
+
+        @Output(OUTPUT_RECOMMENDATIONS)
+        fun outputRecommendations(): MessageChannel
+
+        @Output(OUTPUT_REVIEWS)
+        fun outputReviews(): MessageChannel
+
+        companion object {
+            const val OUTPUT_PRODUCTS = "output-products"
+            const val OUTPUT_RECOMMENDATIONS = "output-recommendations"
+            const val OUTPUT_REVIEWS = "output-reviews"
+        }
     }
 }
+

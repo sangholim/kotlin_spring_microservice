@@ -2,6 +2,33 @@ spring:
   profiles: default
   pid:
     file: product-composite.pid
+  cloud:
+    stream:
+      defaultBinder: rabbit
+      default:
+        contentType: application/json
+      bindings:
+        output-products:
+          destination: products
+          producer:
+            required-groups: auditGroup
+        output-recommendations:
+          destination: recommendations
+          producer:
+            required-groups: auditGroup
+        output-reviews:
+          destination: reviews
+          producer:
+            required-groups: auditGroup
+      kafka:
+        binder:
+          brokers: 127.0.0.1
+          defaultBrokerPort: 9092
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
 
 # swagger api
 api:
@@ -80,6 +107,33 @@ spring:
   profiles: docker
   pid:
     file: product-composite.pid
+  cloud:
+    stream:
+      defaultBinder: rabbit
+      default:
+        contentType: application/json
+      bindings:
+        output-products:
+          destination: products
+          producer:
+            required-groups: auditGroup
+        output-recommendations:
+          destination: recommendations
+          producer:
+            required-groups: auditGroup
+        output-reviews:
+          destination: reviews
+          producer:
+            required-groups: auditGroup
+      kafka:
+        binder:
+          brokers: kafka
+          defaultBrokerPort: 9092
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
 
 server.port: 8080
 server.error.include-message: always

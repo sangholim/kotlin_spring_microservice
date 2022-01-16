@@ -17,6 +17,8 @@ dependencies {
 	implementation(project(":utils","default"))
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("org.springframework.cloud:spring-cloud-starter-stream-rabbit")
+	implementation("org.springframework.cloud:spring-cloud-starter-stream-kafka")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -24,11 +26,10 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 	implementation("io.springfox:springfox-boot-starter:3.0.0")
 
-	// https://mvnrepository.com/artifact/org.mockito/mockito-all
-	testImplementation("org.mockito:mockito-all:1.10.19")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
+	testImplementation("org.springframework.cloud:spring-cloud-stream-test-support")
 	testImplementation("io.projectreactor:reactor-test")
 }
 
@@ -44,11 +45,19 @@ tasks.withType<KotlinCompile> {
 		jvmTarget = "1.8"
 	}
 }
-/*
+
+
+dependencyManagement {
+	imports {
+		mavenBom ("org.springframework.cloud:spring-cloud-dependencies:Hoxton.SR6")
+	}
+}
+
 tasks.test {
+	maxParallelForks = 3
+	setForkEvery(1)
 	useJUnitPlatform()
 	filter {
 		includeTestsMatching("com.msa.*")
 	}
 }
- */

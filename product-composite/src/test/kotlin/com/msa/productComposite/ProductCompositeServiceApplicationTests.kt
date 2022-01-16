@@ -10,6 +10,7 @@ import com.msa.productComposite.api.composite.product.service.ProductCompositeIn
 import com.msa.util.exception.InvalidInputException
 import com.msa.util.exception.NotFoundException
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.`when`
@@ -21,6 +22,8 @@ import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.WebTestClient.BodyContentSpec
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import reactor.core.publisher.Mono.just
 
 
@@ -40,29 +43,33 @@ class ProductCompositeServiceApplicationTests {
 
     @BeforeEach
     fun setUp() {
-        `when`(productCompositeIntegration.getProduct(PRODUCT_ID_OK).block())
-            .thenReturn(Product(PRODUCT_ID_OK, "name", 1, "mock-address"))
-        `when`(productCompositeIntegration.getProduct(PRODUCT_ID_NOT_FOUND).block())
+        `when`(productCompositeIntegration.getProduct(PRODUCT_ID_OK))
+            .thenReturn(just(Product(PRODUCT_ID_OK, "name", 1, "mock-address")))
+        `when`(productCompositeIntegration.getProduct(PRODUCT_ID_NOT_FOUND))
             .thenThrow(NotFoundException("NOT FOUND: $PRODUCT_ID_NOT_FOUND"))
-        `when`(productCompositeIntegration.getProduct(PRODUCT_ID_INVALID).block())
+        `when`(productCompositeIntegration.getProduct(PRODUCT_ID_INVALID))
             .thenThrow(InvalidInputException("INVALID: $PRODUCT_ID_INVALID"))
-
-        `when`(productCompositeIntegration.getReviews(PRODUCT_ID_OK).block())
+        `when`(productCompositeIntegration.getReviews(PRODUCT_ID_OK))
             .thenReturn(
-                listOf(
-                    Review(PRODUCT_ID_OK, 1, "author", "subject", "content", "mock address")
+                Flux.fromIterable(
+                    listOf(
+                        Review(PRODUCT_ID_OK, 1, "author", "subject", "content", "mock address")
+                    )
                 )
             )
-        `when`(productCompositeIntegration.getRecommendations(PRODUCT_ID_OK).block())
+        `when`(productCompositeIntegration.getRecommendations(PRODUCT_ID_OK))
             .thenReturn(
-                listOf(
-                    Recommendation(PRODUCT_ID_OK, 1, "author", 1, "content", "mock address")
+                Flux.fromIterable(
+                    listOf(
+                        Recommendation(PRODUCT_ID_OK, 1, "author", 1, "content", "mock address")
+                    )
                 )
             )
     }
 
 
     @Test
+    @Disabled
     fun contextLoads() {
     }
 
@@ -104,14 +111,14 @@ class ProductCompositeServiceApplicationTests {
 
     @Test
     fun getProductNotFound() {
-        getAndVerifyProduct(PRODUCT_ID_NOT_FOUND, HttpStatus.OK)
+        getAndVerifyProduct(PRODUCT_ID_NOT_FOUND, HttpStatus.NOT_FOUND)
             .jsonPath("$.path").isEqualTo("/product-composite/$PRODUCT_ID_NOT_FOUND")
             .jsonPath("$.message").isEqualTo("NOT FOUND: $PRODUCT_ID_NOT_FOUND")
     }
 
     @Test
     fun getProductInvalid() {
-        getAndVerifyProduct(PRODUCT_ID_INVALID, HttpStatus.OK)
+        getAndVerifyProduct(PRODUCT_ID_INVALID, HttpStatus.UNPROCESSABLE_ENTITY)
             .jsonPath("$.path").isEqualTo("/product-composite/$PRODUCT_ID_INVALID")
             .jsonPath("$.message").isEqualTo("INVALID: $PRODUCT_ID_INVALID")
     }
