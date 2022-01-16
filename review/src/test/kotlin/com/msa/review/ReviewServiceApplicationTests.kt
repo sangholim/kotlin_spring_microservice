@@ -1,16 +1,22 @@
 package com.msa.review
 
+import com.msa.domain.event.Event
 import com.msa.domain.review.vo.Review
 import com.msa.review.persistence.ReviewRepository
-import io.netty.handler.codec.http.HttpResponseStatus.UNPROCESSABLE_ENTITY
-import org.junit.jupiter.api.Assertions.*
+import com.msa.util.exception.InvalidInputException
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.fail
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.cloud.stream.messaging.Sink
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType.APPLICATION_JSON
+import org.springframework.messaging.MessagingException
+import org.springframework.messaging.SubscribableChannel
+import org.springframework.messaging.support.GenericMessage
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.WebTestClient.BodyContentSpec
@@ -30,18 +36,24 @@ class ReviewServiceApplicationTests {
     @Autowired
     private lateinit var repository: ReviewRepository
 
+    @Autowired
+    private lateinit var channels: Sink
+
+    private lateinit var input: SubscribableChannel
+
     @BeforeEach
     fun setupDb() {
         repository.deleteAll()
+        input = channels.input() as SubscribableChannel
     }
 
     @Test
     fun getReviewsByProductId() {
         val productId = 1
         assertEquals(0, repository.findByProductId(productId).size)
-        postAndVerifyReview(productId, 1, HttpStatus.OK)
-        postAndVerifyReview(productId, 2, HttpStatus.OK)
-        postAndVerifyReview(productId, 3, HttpStatus.OK)
+        sendCreateReviewEvent(productId, 1);
+        sendCreateReviewEvent(productId, 2);
+        sendCreateReviewEvent(productId, 3);
         assertEquals(3, repository.findByProductId(productId).size)
 
         getAndVerifyReviewsByProductId(productId, HttpStatus.OK)
@@ -55,25 +67,33 @@ class ReviewServiceApplicationTests {
         val productId = 1
         val reviewId = 1
         assertEquals(0, repository.count())
-        postAndVerifyReview(productId, reviewId, HttpStatus.OK)
-            .jsonPath("$.productId").isEqualTo(productId)
-            .jsonPath("$.reviewId").isEqualTo(reviewId)
+        sendCreateReviewEvent(productId, reviewId);
         assertEquals(1, repository.count())
-        postAndVerifyReview(productId, reviewId, HttpStatus.UNPROCESSABLE_ENTITY)
-            .jsonPath("$.path").isEqualTo("/review")
-            .jsonPath("$.message").isEqualTo("Duplicate key, Product Id: 1, Review Id:1")
+
+        try {
+            sendCreateReviewEvent(productId, reviewId)
+            fail("Expected a MessagingException here!")
+        } catch (me: MessagingException) {
+            if (me.cause is InvalidInputException) {
+                val iie = me.cause as InvalidInputException?
+                assertEquals("Duplicate key, Product Id: 1, Review Id:1", iie!!.message)
+            } else {
+                fail("Expected a InvalidInputException as the root cause!")
+            }
+        }
+
         assertEquals(1, repository.count())
     }
 
     @Test
     fun deleteReviews() {
         val productId = 1
-        val recommendationId = 1
-        postAndVerifyReview(productId, recommendationId, HttpStatus.OK)
+        val reviewId = 1
+        sendCreateReviewEvent(productId, reviewId);
         assertEquals(1, repository.findByProductId(productId).size)
-        deleteAndVerifyReviewsByProductId(productId, HttpStatus.OK)
+        sendDeleteReviewEvent(productId);
         assertEquals(0, repository.findByProductId(productId).size)
-        deleteAndVerifyReviewsByProductId(productId, HttpStatus.OK)
+        sendDeleteReviewEvent(productId);
     }
 
     @Test
@@ -81,7 +101,7 @@ class ReviewServiceApplicationTests {
         getAndVerifyReviewsByProductId("", HttpStatus.BAD_REQUEST)
             .jsonPath("$.path").isEqualTo("/review")
             .jsonPath("$.message").isEqualTo("")
-            //.jsonPath("$.message").isEqualTo("Required int parameter 'productId' is not present")
+        //.jsonPath("$.message").isEqualTo("Required int parameter 'productId' is not present")
     }
 
     @Test
@@ -89,13 +109,14 @@ class ReviewServiceApplicationTests {
         getAndVerifyReviewsByProductId("?productId=no-integer", HttpStatus.BAD_REQUEST)
             .jsonPath("$.path").isEqualTo("/review")
             .jsonPath("$.message").isEqualTo("")
-            //.jsonPath("$.message").isEqualTo("Type mismatch.")
+        //.jsonPath("$.message").isEqualTo("Type mismatch.")
     }
 
     @Test
     fun getReviewsNotFound() {
-        getAndVerifyReviewsByProductId("?productId=213", HttpStatus.OK)
-            .jsonPath("$.length()").isEqualTo(0)
+        getAndVerifyReviewsByProductId("?productId=213", HttpStatus.NOT_FOUND)
+            .jsonPath("$.path").isEqualTo("/review")
+            .jsonPath("$.message").isEqualTo("No review found for productId: 213")
     }
 
     @Test
@@ -146,5 +167,19 @@ class ReviewServiceApplicationTests {
             .exchange()
             .expectStatus().isEqualTo(expectedStatus)
             .expectBody()
+    }
+
+    private fun sendCreateReviewEvent(productId: Int, reviewId: Int) {
+        val review = Review(
+            productId, reviewId,
+            "Author $reviewId", "Subject $reviewId", "Content $reviewId", "SA"
+        )
+        val event: Event<Int, Review> = Event(Event.Type.CREATE, productId, review)
+        input.send(GenericMessage<Any>(event))
+    }
+
+    private fun sendDeleteReviewEvent(productId: Int) {
+        val event: Event<Int, Review> = Event(Event.Type.DELETE, productId, null)
+        input.send(GenericMessage<Any>(event))
     }
 }
