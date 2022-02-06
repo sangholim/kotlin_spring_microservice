@@ -17,6 +17,9 @@
         ports:
             - "8080:8080"
   ```
+#### 설정값 파일 변경
+- linux 환경 변수: `export COMPOSE_FILE=docker-compose-partitions.yml`
+
 
 ### Command
 - `docker-compose up -d` 모든 컨테이너를 백그라운드로 시작 <br>
@@ -51,4 +54,5 @@ FLUSH privileges;
 - 질의
 ```sql
 docker-compose exec mysql mysql -uuser -p review-db -e "select * from reviews"
-```
+``` 
+

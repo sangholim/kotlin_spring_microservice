@@ -1,5 +1,4 @@
 spring:
-  profiles: default
   pid:
     file: review.pid
 # Strongly recommend to set this property to "none" in a production environment!
@@ -52,6 +51,16 @@ server:
 logging:
   level:
     root: INFO
+
+
+management:
+  endpoint:
+    health:
+      show-details: "ALWAYS"
+    web:
+      exposure:
+        include: "*"
+
 ---
 spring:
   profiles: docker

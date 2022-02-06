@@ -1,5 +1,4 @@
 spring:
-  profiles: default
   pid:
     file: product.pid
   data:
@@ -47,6 +46,15 @@ server:
 logging:
   level:
     root: INFO
+
+management:
+  endpoint:
+    health:
+      show-details: "ALWAYS"
+    web:
+      exposure:
+        include: "*"
+
 ---
 spring:
   profiles: docker

@@ -40,12 +40,12 @@ class ProductCompositeIntegration(
 ) {
     private val log = LoggerFactory.getLogger(this.javaClass)
     private val objectMapper = jacksonObjectMapper()
-    val productUrl = "http://$productServiceHost:$productServicePort/product/"
-    val recommendationUrl = "http://$recommendationServiceHost:$recommendationServicePort/recommendation"
-    val reviewUrl = "http://$reviewServiceHost:$reviewServicePort/review"
+    val productUrl = "http://$productServiceHost:$productServicePort"
+    val recommendationUrl = "http://$recommendationServiceHost:$recommendationServicePort"
+    val reviewUrl = "http://$reviewServiceHost:$reviewServicePort"
 
     fun getProduct(productId: Int): Mono<Product> =
-        WebClient.create(productUrl + productId).get().retrieve().bodyToMono(Product::class.java)
+        WebClient.create("$productUrl/product/$productId").get().retrieve().bodyToMono(Product::class.java)
             .timeout(Duration.ofSeconds(60))
             .onErrorMap(WebClientResponseException::class.java) { ex -> handleException(ex) }
 
@@ -61,7 +61,7 @@ class ProductCompositeIntegration(
     }
 
     fun getRecommendations(productId: Int): Flux<Recommendation> =
-        WebClient.create("$recommendationUrl?productId=$productId").get().retrieve()
+        WebClient.create("$recommendationUrl/recommendation?productId=$productId").get().retrieve()
             .bodyToFlux(Recommendation::class.java).timeout(Duration.ofSeconds(60))
             .onErrorResume { empty() }
 
@@ -80,7 +80,7 @@ class ProductCompositeIntegration(
     }
 
     fun getReviews(productId: Int): Flux<Review> =
-        WebClient.create("$reviewUrl?productId=$productId").get().retrieve()
+        WebClient.create("$reviewUrl/review?productId=$productId").get().retrieve()
             .bodyToFlux(Review::class.java)
             .timeout(Duration.ofSeconds(60))
             .onErrorResume { empty() }
