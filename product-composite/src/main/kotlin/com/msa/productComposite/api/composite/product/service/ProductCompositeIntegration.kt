@@ -29,23 +29,18 @@ import java.time.Duration
 @Component
 @Api(description = "REST API for composite product information")
 class ProductCompositeIntegration(
-    @Value("\${app.product-service.host}") productServiceHost: String = "",
-    @Value("\${app.product-service.port}") productServicePort: Int = 0,
-    @Value("\${app.recommendation-service.host}") recommendationServiceHost: String = "",
-    @Value("\${app.recommendation-service.port}") recommendationServicePort: Int = 0,
-    @Value("\${app.review-service.host}") reviewServiceHost: String = "",
-    @Value("\${app.review-service.port}") reviewServicePort: Int = 0,
     private val messageSources: MessageSources,
-    val serviceUtil: ServiceUtil
+    private val webClientBuilder: WebClient.Builder
 ) {
     private val log = LoggerFactory.getLogger(this.javaClass)
     private val objectMapper = jacksonObjectMapper()
-    val productUrl = "http://$productServiceHost:$productServicePort"
-    val recommendationUrl = "http://$recommendationServiceHost:$recommendationServicePort"
-    val reviewUrl = "http://$reviewServiceHost:$reviewServicePort"
-
+    val productUrl = "http://product"
+    val recommendationUrl = "http://recommendation"
+    val reviewUrl = "http://review"
+    private val webClient = webClientBuilder.build()
     fun getProduct(productId: Int): Mono<Product> =
-        WebClient.create("$productUrl/product/$productId").get().retrieve().bodyToMono(Product::class.java)
+        webClient.get().uri("$productUrl/product/$productId")
+        .retrieve().bodyToMono(Product::class.java)
             .timeout(Duration.ofSeconds(60))
             .onErrorMap(WebClientResponseException::class.java) { ex -> handleException(ex) }
 
@@ -61,7 +56,8 @@ class ProductCompositeIntegration(
     }
 
     fun getRecommendations(productId: Int): Flux<Recommendation> =
-        WebClient.create("$recommendationUrl/recommendation?productId=$productId").get().retrieve()
+        webClient.get().uri("$recommendationUrl/recommendation?productId=$productId")
+            .retrieve()
             .bodyToFlux(Recommendation::class.java).timeout(Duration.ofSeconds(60))
             .onErrorResume { empty() }
 
@@ -80,7 +76,8 @@ class ProductCompositeIntegration(
     }
 
     fun getReviews(productId: Int): Flux<Review> =
-        WebClient.create("$reviewUrl/review?productId=$productId").get().retrieve()
+        webClient.get().uri("$reviewUrl/review?productId=$productId")
+            .retrieve()
             .bodyToFlux(Review::class.java)
             .timeout(Duration.ofSeconds(60))
             .onErrorResume { empty() }
@@ -112,7 +109,7 @@ class ProductCompositeIntegration(
 
     private fun getHealth(url: String): Mono<Health> {
         log.debug("Will call the Health API on URL: {}", url)
-        return WebClient.create("$url/actuator/health").get().retrieve().bodyToMono(String::class.java)
+        return webClient.get().uri("$url/actuator/health").retrieve().bodyToMono(String::class.java)
             .map { s -> Health.Builder().up().build() }
             .onErrorResume { ex -> Mono.just(Health.Builder().down(ex).build()) }
     }

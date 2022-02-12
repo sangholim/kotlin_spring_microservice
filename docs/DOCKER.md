@@ -22,6 +22,8 @@
 
 
 ### Command
+- `docker-compose up -d --scale service=0` 서비스 중지 <br>
+- `docker-compose up -d --scale service=3` 실행되고 있는 서비스 x의 인스턴스를 총 3개로 늘린다 <br>
 - `docker-compose up -d` 모든 컨테이너를 백그라운드로 시작 <br>
                          커맨드 실행 터미날 잠금 해제 `-d`
 - `docker-compose down` 모든 컨테이너를 중지

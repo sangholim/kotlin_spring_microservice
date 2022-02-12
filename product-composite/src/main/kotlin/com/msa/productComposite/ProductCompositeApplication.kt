@@ -7,10 +7,12 @@ import org.springframework.boot.SpringApplication
 import org.springframework.boot.actuate.health.*
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.ApplicationPidFileWriter
+import org.springframework.cloud.client.loadbalancer.LoadBalanced
 import org.springframework.cloud.stream.annotation.EnableBinding
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.reactive.function.client.WebClient
 import springfox.documentation.builders.PathSelectors
 import springfox.documentation.builders.RequestHandlerSelectors.basePackage
 import springfox.documentation.service.ApiInfo
@@ -93,6 +95,11 @@ class ProductCompositeApplication {
         return CompositeReactiveHealthIndicator(healthAggregator, registry)
     }
 
+    @Bean
+    @LoadBalanced
+    fun loadBalancedWebClientBuilder(): WebClient.Builder {
+        return WebClient.builder()
+    }
 }
 
 fun main(args: Array<String>) {
