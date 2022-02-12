@@ -28,7 +28,6 @@ services:
         condition: service_healthy
 
   review:
-    container_name: review
     image: review
     build: review
     mem_limit: 350m
@@ -52,6 +51,12 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+
+  eureka:
+    build: spring-cloud
+    mem_limit: 350m
+    ports:
+      - "8761:8761"
 
 
   # $ mongo

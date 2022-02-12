@@ -28,7 +28,8 @@ import reactor.core.publisher.Mono.just
 
 
 @ExtendWith(value = [SpringExtension::class])
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+properties = ["eureka.client.enabled=false"])
 class ProductCompositeServiceApplicationTests {
 
     private val PRODUCT_ID_OK = 1
