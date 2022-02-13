@@ -29,7 +29,8 @@ import reactor.core.publisher.Mono.just
 import java.util.concurrent.BlockingQueue
 
 @ExtendWith(value = [SpringExtension::class])
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = ["eureka.client.enabled=false"])
 class MessagingTests {
     @Autowired
     private lateinit var client: WebTestClient
