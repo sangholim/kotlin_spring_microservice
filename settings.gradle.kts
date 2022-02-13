@@ -1,5 +1,6 @@
 rootProject.name = "micro-services"
 include(
+    "kotlin_spring_microservice",
     "gateway",
     "spring-cloud",
     "product",
