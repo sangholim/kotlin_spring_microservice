@@ -87,15 +87,6 @@ class ProductCompositeApplication {
     }
 
     @Bean
-    fun coreServices(productCompositeIntegration: ProductCompositeIntegration): ReactiveHealthIndicator {
-        val registry: ReactiveHealthIndicatorRegistry = DefaultReactiveHealthIndicatorRegistry(LinkedHashMap())
-        registry.register("product") { productCompositeIntegration.getProductHealth() }
-        registry.register("recommendation") { productCompositeIntegration.getRecommendationHealth() }
-        registry.register("review") { productCompositeIntegration.getReviewHealth() }
-        return CompositeReactiveHealthIndicator(healthAggregator, registry)
-    }
-
-    @Bean
     @LoadBalanced
     fun loadBalancedWebClientBuilder(): WebClient.Builder {
         return WebClient.builder()

@@ -1,5 +1,6 @@
 rootProject.name = "micro-services"
 include(
+    "gateway",
     "spring-cloud",
     "product",
     "review",

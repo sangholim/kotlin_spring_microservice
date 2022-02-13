@@ -31,3 +31,9 @@ hs_err_pid*
 /product/product.pid
 /recommendation/recommendation.pid
 /review/review.pid
+/spring-cloud/build/
+/spring-cloud/.gradle/
+/spring-cloud/.idea/
+/gateway/build/
+/gateway/.gradle/
+/gateway/.idea/
