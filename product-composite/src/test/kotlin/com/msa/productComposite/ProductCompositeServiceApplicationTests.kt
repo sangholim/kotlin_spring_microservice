@@ -6,6 +6,7 @@ import com.msa.domain.composite.ReviewSummary
 import com.msa.domain.product.vo.Product
 import com.msa.domain.recommendation.vo.Recommendation
 import com.msa.domain.review.vo.Review
+import com.msa.productComposite.api.composite.product.config.SecurityConfig
 import com.msa.productComposite.api.composite.product.service.ProductCompositeIntegration
 import com.msa.util.exception.InvalidInputException
 import com.msa.util.exception.NotFoundException
@@ -30,6 +31,7 @@ import reactor.core.publisher.Mono.just
 @ExtendWith(value = [SpringExtension::class])
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 properties = ["eureka.client.enabled=false"])
+@Disabled
 class ProductCompositeServiceApplicationTests {
 
     private val PRODUCT_ID_OK = 1
