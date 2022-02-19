@@ -3,10 +3,11 @@ package com.msa.auth
 
 import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.RSAKey
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
+import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 import org.springframework.security.core.Authentication
@@ -14,8 +15,7 @@ import org.springframework.security.core.authority.AuthorityUtils
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer
-import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer
+import org.springframework.security.oauth2.config.annotation.web.configuration.*
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer
 import org.springframework.security.oauth2.provider.endpoint.FrameworkEndpoint
 import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter
@@ -46,6 +46,9 @@ class AuthorizationServerConfiguration(
     @Value("\${security.oauth2.authorizationserver.jwt.enabled:true}") val jwtEnabled: Boolean = false
 ) : AuthorizationServerConfigurerAdapter() {
 
+    @Autowired
+    private lateinit var authenticationManager: AuthenticationManager
+
     override fun configure(clients: ClientDetailsServiceConfigurer) {
         clients.inMemory()
             .withClient("reader")
@@ -72,7 +75,7 @@ class AuthorizationServerConfiguration(
 
     override fun configure(endpoints: AuthorizationServerEndpointsConfigurer) {
         endpoints
-            //.authenticationManager(this.authenticationManager)
+            .authenticationManager(authenticationManager)
             .tokenStore(tokenStore())
         if (this.jwtEnabled) {
             endpoints
@@ -124,11 +127,12 @@ class AuthorizationServerConfiguration(
 }
 
 
+
 /**
  * For configuring the end users recognized by this Authorization Server
  */
 @Configuration
-internal class UserConfig : WebSecurityConfigurerAdapter() {
+class UserConfig : WebSecurityConfigurerAdapter() {
     @Throws(Exception::class)
     override fun configure(http: HttpSecurity) {
         http
@@ -144,7 +148,7 @@ internal class UserConfig : WebSecurityConfigurerAdapter() {
     }
 
     @Bean
-    public override fun userDetailsService(): UserDetailsService {
+    override fun userDetailsService(): UserDetailsService {
         return InMemoryUserDetailsManager(
             User.withDefaultPasswordEncoder()
                 .username("magnus")
@@ -152,6 +156,11 @@ internal class UserConfig : WebSecurityConfigurerAdapter() {
                 .roles("USER")
                 .build()
         )
+    }
+
+    @Bean
+    override fun authenticationManagerBean(): AuthenticationManager {
+        return super.authenticationManagerBean()
     }
 }
 

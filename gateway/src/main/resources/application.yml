@@ -56,6 +56,11 @@ spring.cloud.gateway.routes:
     predicates:
       - Path=/eureka/**
 
+  - id: oauth-server
+    uri: lb://auth-server
+    predicates:
+      - Path=/oauth/**
+
   - id: host_route_200
     uri: http://httpstat.us
     predicates:
