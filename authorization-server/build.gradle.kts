@@ -18,16 +18,17 @@ repositories {
 extra["springCloudVersion"] = "Hoxton.SR6"
 
 dependencies {
+
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-
+	implementation ("org.springframework.boot:spring-boot-starter-web")
 	implementation ("org.springframework.boot:spring-boot-starter-actuator")
-	implementation("org.springframework.boot:spring-boot-starter-security")
-	implementation("org.springframework.security:spring-security-oauth2-resource-server")
-	implementation("org.springframework.security:spring-security-oauth2-jose")
+	implementation ("org.springframework.boot:spring-boot-starter-security")
 
-	implementation ("org.springframework.cloud:spring-cloud-starter-gateway")
+	implementation ("org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure:2.3.1.RELEASE")
 	implementation ("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
+	implementation ("com.nimbusds:nimbus-jose-jwt:6.7")
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
