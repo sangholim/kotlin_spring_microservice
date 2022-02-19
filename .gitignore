@@ -39,3 +39,4 @@ hs_err_pid*
 /gateway/.idea/
 /authorization-server/.gradle/
 /authorization-server/.idea/
+/authorization-server/build/**
