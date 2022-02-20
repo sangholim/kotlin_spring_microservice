@@ -31,7 +31,7 @@ import java.util.concurrent.BlockingQueue
 
 @ExtendWith(value = [SpringExtension::class])
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = ["eureka.client.enabled=false"])
+    properties = ["eureka.client.enabled=false","spring.cloud.config.enabled=false"])
 @Disabled
 class MessagingTests {
     @Autowired

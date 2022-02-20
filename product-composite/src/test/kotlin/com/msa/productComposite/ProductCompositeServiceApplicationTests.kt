@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono.just
 
 @ExtendWith(value = [SpringExtension::class])
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-properties = ["eureka.client.enabled=false"])
+properties = ["eureka.client.enabled=false","spring.cloud.config.enabled=false"])
 @Disabled
 class ProductCompositeServiceApplicationTests {
 
