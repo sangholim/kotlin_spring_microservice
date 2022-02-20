@@ -106,7 +106,7 @@ services:
     build: gateway
     mem_limit: 350m
     ports:
-      - "8080:8080"
+      - "8443:8443"
 
   auth-server:
     environment:

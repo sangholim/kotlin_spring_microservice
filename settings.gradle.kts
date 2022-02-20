@@ -4,7 +4,7 @@ include(
 "config-server",
 "authorization-server",
 "gateway",
-"spring-cloud",
+"eureka-server",
 "product",
 "review",
 "recommendation",

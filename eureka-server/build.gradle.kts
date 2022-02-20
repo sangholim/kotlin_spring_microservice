@@ -22,7 +22,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
 	implementation ("org.springframework.boot:spring-boot-starter-security")
-	implementation("org.springframework.cloud:spring-cloud-config-server")
+	implementation ("org.springframework.cloud:spring-cloud-starter-config")
 	implementation ("org.springframework.retry:spring-retry")
 	implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-server")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

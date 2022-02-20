@@ -59,7 +59,7 @@ services:
         condition: service_healthy
 
   eureka:
-    build: spring-cloud
+    build: eureka-server
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
@@ -76,7 +76,7 @@ services:
     build: gateway
     mem_limit: 350m
     ports:
-      - "8080:8080"
+      - "8443:8443"
 
   auth-server:
     environment:

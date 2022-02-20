@@ -40,3 +40,4 @@ hs_err_pid*
 /authorization-server/.gradle/
 /authorization-server/.idea/
 /authorization-server/build/**
+/eureka-server/
