@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono.just
 @ExtendWith(value = [SpringExtension::class])
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = ["spring.datasource.url=jdbc:h2:mem:review-db", "eureka.client.enabled=false"]
+    properties = ["spring.datasource.url=jdbc:h2:mem:review-db", "eureka.client.enabled=false","spring.cloud.config.enabled=false"]
 )
 class ReviewServiceApplicationTests {
 

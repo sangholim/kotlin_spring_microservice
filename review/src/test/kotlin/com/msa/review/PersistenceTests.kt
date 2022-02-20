@@ -18,7 +18,7 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.OptimisticLockingFailureException
 
 @ExtendWith(SpringExtension::class)
-@DataJpaTest
+@DataJpaTest(properties = ["spring.cloud.config.enabled=false"])
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class PersistenceTests {
 
