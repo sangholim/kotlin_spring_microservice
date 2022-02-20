@@ -21,6 +21,7 @@ class SecurityConfig {
             .pathMatchers("/actuator/**").permitAll()
             .pathMatchers("/eureka/**").permitAll()
             .pathMatchers("/oauth/**").permitAll()
+            .pathMatchers("/config/**").permitAll()
             .anyExchange().authenticated()
             .and()
             .oauth2ResourceServer()
