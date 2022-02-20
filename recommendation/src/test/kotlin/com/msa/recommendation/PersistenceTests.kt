@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.test.context.junit.jupiter.SpringExtension
 
 @ExtendWith(SpringExtension::class)
-@DataMongoTest
+@DataMongoTest(properties = ["spring.cloud.config.enabled=false"])
 class PersistenceTests {
     @Autowired
     private lateinit var repository: RecommendationRepository

@@ -15,7 +15,7 @@ import java.security.InvalidParameterException
 
 
 @ExtendWith(SpringExtension::class)
-@DataMongoTest
+@DataMongoTest(properties = ["spring.cloud.config.enabled=false"])
 class PersistenceTests {
     @Autowired
     private lateinit var repository: ProductRepository
