@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-	properties = ["eureka.client.enabled=false"])
+	properties = ["eureka.client.enabled=false","spring.cloud.config.enabled=false"])
 @AutoConfigureMockMvc
 @Disabled
 class OAuth2AuthorizationServerApplicationTests {
