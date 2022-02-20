@@ -26,7 +26,7 @@ import kotlin.test.fail
 @ExtendWith(value = [SpringExtension::class])
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = ["spring.data.mongodb.port: 0", "eureka.client.enabled=false"]
+    properties = ["spring.data.mongodb.port: 0", "eureka.client.enabled=false","spring.cloud.config.enabled=false"]
 )
 class RecommendationServiceApplicationTests {
 
