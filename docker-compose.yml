@@ -94,7 +94,7 @@ services:
       - SPRING_SECURITY_USER_PASSWORD=${CONFIG_SERVER_PWD}
     volumes:
       - $PWD/config-repo:/config-repo
-    build: spring-cloud/config-server
+    build: config-server
     mem_limit: 350m
 
   # $ mongo
