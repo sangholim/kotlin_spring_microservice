@@ -19,6 +19,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("org.springframework.cloud:spring-cloud-starter-config")
+	implementation ("org.springframework.retry:spring-retry")
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
 	implementation("org.springframework.cloud:spring-cloud-starter-stream-rabbit")
 	implementation("org.springframework.cloud:spring-cloud-starter-stream-kafka")

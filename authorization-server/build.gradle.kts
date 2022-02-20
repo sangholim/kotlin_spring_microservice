@@ -25,6 +25,7 @@ dependencies {
 	implementation ("org.springframework.boot:spring-boot-starter-actuator")
 	implementation ("org.springframework.boot:spring-boot-starter-security")
 	implementation ("org.springframework.cloud:spring-cloud-starter-config")
+	implementation ("org.springframework.retry:spring-retry")
 
 	implementation ("org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure:2.3.1.RELEASE")
 	implementation ("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
